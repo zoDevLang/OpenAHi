@@ -1,0 +1,100 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.env
+.venv
+env/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Testing
+.tox/
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# Logs and output
+*.log
+*.out
+*.err
+logs/
+output/
+
+# Checkpoints and models
+*.pt
+*.pth
+*.bin
+*.h5
+*.ckpt
+checkpoints/
+
+# Datasets
+*.jsonl
+*.txt
+*.csv
+*.parquet
+datasets/
+
+# C++
+*.o
+*.a
+*.so
+*.dll
+*.exe
+CMakeCache.txt
+CMakeFiles/
+Makefile
+
+# Rust
+target/
+Cargo.lock
+
+# TypeScript
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+cache/
+temp/
+
+# Environment files
+.env
+.env.*
+.env.local

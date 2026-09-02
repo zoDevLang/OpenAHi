@@ -1,0 +1,29 @@
+{
+  "model_dir": "./models",
+  "cache_dir": "./cache",
+  "max_loaded_models": 10,
+  "max_memory": 0,
+  "num_threads": 4,
+  "enable_gpu": true,
+  "log_level": "info",
+  "debug": false,
+  "api": {
+    "enable_http": true,
+    "http_address": "127.0.0.1",
+    "http_port": 8080,
+    "enable_websocket": false,
+    "websocket_address": "127.0.0.1",
+    "websocket_port": 8081,
+    "cors_origins": [],
+    "max_request_size": 10485760,
+    "request_timeout": 30
+  },
+  "security": {
+    "verify_checksums": true,
+    "enable_sandbox": false,
+    "allowed_sources": [],
+    "blocked_models": [],
+    "max_download_size": 1073741824,
+    "https_only": true
+  }
+}

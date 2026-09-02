@@ -1,0 +1,11 @@
+{
+  "model_type": "composter",
+  "version": "1.00.0",
+  "vocab_size": 8192,
+  "context_length": 512,
+  "embedding_dim": 512,
+  "num_layers": 6,
+  "num_heads": 8,
+  "dropout": 0.1,
+  "head_dim": 64
+}
