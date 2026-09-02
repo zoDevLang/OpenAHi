@@ -1,4 +1,10 @@
-"""Command-line interface for openahi package"""
+"""Command-line interface for openahi package (improved compatibility)
+
+Improvements:
+- MODEL_DIR is now configurable via OPENAHI_MODEL_DIR env var
+- Falls back to XDG_DATA_HOME if set, otherwise to ~/.openahi/models
+- Better path handling for Termux and other environments
+"""
 from __future__ import annotations
 import argparse
 import os
@@ -8,7 +14,19 @@ import torch
 from openahi.config import DEFAULT_CONFIG
 from openahi.models.composter import ComposterModel
 
-MODEL_DIR = Path.home() / ".openahi" / "models"
+# Model storage directory:
+# - If OPENAHI_MODEL_DIR is set, use it
+# - Else if XDG_DATA_HOME is set, use $XDG_DATA_HOME/openahi/models
+# - Else use ~/.openahi/models
+xdg = os.environ.get("XDG_DATA_HOME")
+home = Path.home()
+_model_dir_env = os.environ.get("OPENAHI_MODEL_DIR")
+if _model_dir_env:
+    MODEL_DIR = Path(_model_dir_env)
+elif xdg:
+    MODEL_DIR = Path(xdg) / "openahi" / "models"
+else:
+    MODEL_DIR = home / ".openahi" / "models"
 
 
 def list_models():
