@@ -1,0 +1,31 @@
+[package]
+name = "openahi-sdk"
+version = "0.1.0"
+edition = "2021"
+authors = ["ZoDev"]
+description = "OpenAHI Rust SDK - Native access to OpenAHI for Rust applications"
+license = "Apache-2.0"
+readme = "README.md"
+keywords = ["openahi", "ai", "sdk", "rust"]
+categories = ["science", "algorithms"]
+
+[dependencies]
+# Workspace dependencies
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Local dependencies
+openahi-runtime = { path = "../runtime" }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["full"] }
+
+[features]
+default = []
+
+[lib]
+name = "openahi_sdk"
+path = "src/lib.rs"
+crate-type = ["rlib", "cdylib"]

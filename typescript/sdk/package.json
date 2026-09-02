@@ -1,0 +1,36 @@
+{
+  "name": "@openahi/sdk",
+  "version": "0.1.0",
+  "description": "OpenAHI TypeScript SDK - Communicate with local OpenAHI runtime",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "prepublish": "npm run build"
+  },
+  "keywords": [
+    "openahi",
+    "ai",
+    "sdk",
+    "typescript",
+    "inference"
+  ],
+  "author": "ZoDev",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "axios": "^1.6.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/jest": "^29.0.0",
+    "jest": "^29.0.0",
+    "ts-jest": "^29.0.0",
+    "typescript": "^5.0.0",
+    "eslint": "^8.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0"
+  }
+}
