@@ -1,0 +1,6 @@
+This file contains a tiny example dataset for testing the model.
+
+hello world
+hello there
+this is a tiny dataset for testing composter
+openahi toy data
