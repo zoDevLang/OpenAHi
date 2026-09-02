@@ -14,3 +14,7 @@ pytest = "^7.0"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+openahi = "openahi.cli:main"
+pkg = "openahi.pkg_cli:main"
