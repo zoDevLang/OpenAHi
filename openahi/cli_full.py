@@ -1,25 +1,10 @@
-"""Comprehensive OpenAHI CLI implementing the requested command specification.
+"""OpenAHI comprehensive CLI (updated) with server and mirror support.
 
-Commands implemented:
-- openahi help
-- openahi version
-- openahi info
-- openahi models
-- openahi model info <model>
-- openahi install <model> | <model>@<version> | news
-- openahi check-release
-- openahi update <model>
-- openahi remove <model>
-- openahi run <model>[@<version>] (with generation flags)
-- openahi train <model> (small local training on tiny dataset)
-- openahi evaluate <model> (evaluate on tiny dataset)
-- openahi config
-- openahi cache
-- openahi doctor
+Added commands:
+- openahi serve [--port PORT]         # serve installed models over local HTTP for LAN/offline use
+- openahi mirror <target_dir>         # copy installed models to a target directory (all files/folders)
 
-Notes:
-- Commands are conservative: they perform only supported operations, and print clear messages when functionality is limited.
-- For remote installs, the installer uses artifact metadata in artifacts/ to determine how to proceed.
+This file is an updated version of cli_full.py with serve/mirror integrated.
 """
 from __future__ import annotations
 import argparse
@@ -31,6 +16,8 @@ import json
 import textwrap
 import platform
 import tempfile
+import threading
+import signal
 
 from openahi import __version__
 from openahi import Composter
@@ -39,6 +26,7 @@ from openahi.config import DEFAULT_CONFIG
 from openahi.training.trainer import Trainer
 from openahi.data.dataset import load_dataset_from_file
 from openahi.cli import list_models as _list_models, install_model as _install_model, uninstall_model as _uninstall_model, check_release as _check_release
+from openahi.server import serve_models, mirror_models
 
 # Re-export model storage location used by openahi.cli
 xdg = os.environ.get("XDG_DATA_HOME")
@@ -273,6 +261,26 @@ def cmd_doctor(args):
         print("Doctor found issues. Install PyTorch and ensure model storage is writable.")
 
 
+def cmd_serve(args):
+    port = args.port
+    directory = args.directory or str(MODEL_DIR)
+    print(f"Serving models from {directory} on port {port}. Press Ctrl-C to stop.")
+    try:
+        serve_models(directory, port)
+    except KeyboardInterrupt:
+        print("Server stopped by user")
+
+
+def cmd_mirror(args):
+    target = Path(args.target).expanduser()
+    if not MODEL_DIR.exists():
+        print(f"No models installed at {MODEL_DIR}")
+        return
+    print(f"Mirroring models from {MODEL_DIR} to {target}")
+    mirror_models(MODEL_DIR, target)
+    print("Mirror completed")
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(prog='openahi', description='OpenAHI CLI')
     sub = parser.add_subparsers(dest='cmd')
@@ -324,6 +332,13 @@ def main(argv=None):
     sub.add_parser('cache')
     sub.add_parser('doctor')
 
+    p_serve = sub.add_parser('serve')
+    p_serve.add_argument('--port', type=int, default=8000)
+    p_serve.add_argument('--directory', type=str, default="")
+
+    p_mirror = sub.add_parser('mirror')
+    p_mirror.add_argument('target')
+
     args = parser.parse_args(argv)
     if args.cmd in (None, 'help'):
         parser.print_help()
@@ -356,6 +371,10 @@ def main(argv=None):
         cmd_cache(args)
     elif args.cmd == 'doctor':
         cmd_doctor(args)
+    elif args.cmd == 'serve':
+        cmd_serve(args)
+    elif args.cmd == 'mirror':
+        cmd_mirror(args)
     else:
         print(f"Unknown command: {args.cmd}")
         parser.print_help()
