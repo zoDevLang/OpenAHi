@@ -11,5 +11,7 @@
     "d_ff": 512,
     "dropout": 0.1
   },
-  "notes": "This artifact contains model metadata. The installer will download this file and construct a checkpoint locally based on the published config."
+  "url": "https://github.com/zoDevLang/OpenAHi/releases/download/v1.00.0/composter-1.00.0.pt",
+  "sha256": "TO_BE_FILLED",
+  "notes": "Release binary URL and SHA256 placeholder. Replace sha256 with the real checksum after uploading the artifact to the release."
 }
