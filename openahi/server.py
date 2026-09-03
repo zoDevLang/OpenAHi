@@ -1,15 +1,3 @@
-"""Simple HTTP(S) server and mirror utilities for OpenAHI models with optional HTTPS and Basic Auth.
-
-- serve_models(directory, port, tls=False, certfile=None, keyfile=None, username=None, password=None, generate_self_signed=False):
-    Serve the given directory over HTTP or HTTPS. If username/password are provided, require HTTP Basic Auth.
-    If generate_self_signed is True and no certfile/keyfile provided, attempts to generate a self-signed certificate using the 'openssl' CLI.
-
-- mirror_models(src_dir, target_dir): Recursively copy installed models to a target directory.
-
-Notes:
-- This module tries to remain stdlib-only. For self-signed cert generation it will call the system 'openssl' command if available.
-- The Basic Auth implementation is simple and suitable for LAN use. Do not expose to untrusted networks without additional protections.
-"""
 from __future__ import annotations
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
@@ -20,11 +8,14 @@ import ssl
 import base64
 import subprocess
 import tempfile
+import tarfile
 from typing import Optional
 
 
 class BasicAuthHandler(SimpleHTTPRequestHandler):
-    """HTTP request handler that enforces Basic Auth when username/password provided."""
+    """HTTP request handler that enforces Basic Auth when username/password provided,
+    and supports PUT uploads to /openahi/sync to receive model tarballs.
+    """
 
     def __init__(self, *args, username: Optional[str] = None, password: Optional[str] = None, directory: Optional[str] = None, **kwargs):
         self._auth_username = username
@@ -67,10 +58,69 @@ class BasicAuthHandler(SimpleHTTPRequestHandler):
         return super().do_HEAD()
 
     def do_POST(self):
+        # Keep compatibility for existing static behavior (not used for sync)
         if not self._is_auth_ok():
             self._require_auth()
             return
         return super().do_POST()
+
+    def do_PUT(self):
+        # Accept tarball uploads to /openahi/sync
+        if not self._is_auth_ok():
+            self._require_auth()
+            return
+        if not self.path.startswith('/openahi/sync'):
+            # Respond 405 Method Not Allowed for other PUTs
+            self.send_response(405)
+            self.end_headers()
+            return
+        # Read headers
+        length = int(self.headers.get('Content-Length', '0'))
+        filename = self.headers.get('X-Filename')
+        if not filename:
+            self.send_response(400)
+            self.end_headers()
+            self.wfile.write(b'Missing X-Filename header')
+            return
+        # write to temp file
+        try:
+            data = self.rfile.read(length)
+            tf = tempfile.NamedTemporaryFile(delete=False)
+            tf.write(data)
+            tf.flush()
+            tf.close()
+            # extract tarball into the served directory (self.directory)
+            target_root = Path(self.directory)
+            target_root.mkdir(parents=True, exist_ok=True)
+            # extract into a subdirectory named after filename (without extension)
+            name = Path(filename).stem
+            dest_dir = target_root / name
+            # remove existing dest_dir to replace
+            if dest_dir.exists():
+                shutil.rmtree(dest_dir)
+            dest_dir.mkdir(parents=True, exist_ok=True)
+            with tarfile.open(tf.name, 'r:gz') as t:
+                def is_within_directory(directory, target):
+                    abs_directory = os.path.abspath(directory)
+                    abs_target = os.path.abspath(target)
+                    return os.path.commonpath([abs_directory]) == os.path.commonpath([abs_directory, abs_target])
+                for member in t.getmembers():
+                    member_path = dest_dir / member.name
+                    if not is_within_directory(str(dest_dir), str(member_path)):
+                        raise Exception("Attempted Path Traversal in Tar File")
+                t.extractall(path=dest_dir)
+            os.unlink(tf.name)
+            self.send_response(200)
+            self.end_headers()
+            self.wfile.write(b'OK')
+        except Exception as e:
+            self.send_response(500)
+            self.end_headers()
+            msg = f'Upload failed: {e}'
+            try:
+                self.wfile.write(msg.encode('utf-8'))
+            except Exception:
+                pass
 
 
 def _generate_self_signed_cert(cert_path: Path, key_path: Path) -> None:

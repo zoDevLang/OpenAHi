@@ -1,0 +1,1 @@
+Add network CLI: implement openahi/network.py to manage peers (add/remove/list) and push models via HTTP PUT of model tar.gz to peers' /openahi/sync endpoint. Also extended server handler to accept PUT uploads to /openahi/sync and extract uploaded tarballs into the served directory. This enables basic peer-to-peer model push/pull without external services.
