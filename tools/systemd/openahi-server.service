@@ -1,0 +1,12 @@
+[Unit]
+Description=OpenAHI Local Model Server
+After=network.target
+
+[Service]
+Type=simple
+User=openahi
+ExecStart=/usr/local/bin/openahi serve --port 8443 --directory /var/lib/openahi/models --tls --generate-self-signed --username openahi --password changeme
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

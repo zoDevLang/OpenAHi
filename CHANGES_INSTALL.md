@@ -1,0 +1,1 @@
+Add system-level installer script: tools/install_system_pkg.sh to install package system-wide, create /usr/local/bin shims, and optionally install a systemd service unit.
