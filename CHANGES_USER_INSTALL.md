@@ -1,0 +1,1 @@
+Add user-level installer script tools/install_user_pkg.sh to install OpenAHI from GitHub into the user's site-packages, attempt to install dependencies (including PyTorch CPU wheels), and create a ~/bin/pkg shim so `pkg install openahi` works without cloning the repo.
