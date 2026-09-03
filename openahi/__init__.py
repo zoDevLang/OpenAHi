@@ -1,19 +1,11 @@
-"""Package API and Composter wrapper"""
+"""OpenAHI package initializer: expose Composter and version"""
 from __future__ import annotations
 from typing import Optional
-import torch
+
 from openahi.models.composter import ComposterModel
 from openahi.tokenizer.tokenizer import SimpleTokenizer
-from openahi.config import DEFAULT_CONFIG
 
-
-def _load_checkpoint(path: str):
-    data = torch.load(path, map_location='cpu')
-    config = data.get('config', DEFAULT_CONFIG)
-    model = ComposterModel(config)
-    model.load_state_dict(data['model_state_dict'])
-    tokenizer = SimpleTokenizer()
-    return model, tokenizer
+__version__ = "1.00.0"
 
 
 class Composter:
@@ -23,7 +15,12 @@ class Composter:
 
     @classmethod
     def from_checkpoint(cls, path: str):
-        model, tokenizer = _load_checkpoint(path)
+        import torch
+        data = torch.load(path, map_location='cpu')
+        config = data.get('config')
+        model = ComposterModel(config)
+        model.load_state_dict(data['model_state_dict'])
+        tokenizer = SimpleTokenizer()
         return cls(model, tokenizer)
 
     def generate(self, prompt: str, max_new_tokens: int = 50, temperature: float = 1.0, top_k: Optional[int] = None, top_p: Optional[float] = None) -> str:
