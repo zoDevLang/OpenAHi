@@ -1,7 +1,11 @@
-"""Composter model implementation (small transformer)"""
+"""Fixes and improvements to ComposterModel:
+- Improved top-p filtering implementation in generate()
+- Added save_checkpoint and load_checkpoint convenience methods
+- Minor robustness fixes
+"""
 from __future__ import annotations
-from typing import Optional
 import math
+from typing import Optional
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -104,29 +108,59 @@ class ComposterModel(nn.Module):
 
     @torch.no_grad()
     def generate(self, idx: torch.Tensor, max_new_tokens: int = 50, temperature: float = 1.0, top_k: Optional[int] = None, top_p: Optional[float] = None):
+        device = idx.device
+        batch_size = idx.size(0)
         for _ in range(max_new_tokens):
             idx_cond = idx[:, -self.block_size:]
             logits, _ = self.forward(idx_cond)
-            logits = logits[:, -1, :] / (temperature if temperature > 0 else 1.0)
+            logits = logits[:, -1, :]
+            if temperature != 1.0 and temperature > 0:
+                logits = logits / temperature
             if top_k is not None and top_k > 0:
-                v, _ = torch.topk(logits, top_k)
-                minv = v[:, -1].unsqueeze(1)
-                logits = torch.where(logits < minv, torch.tensor(-float('Inf'), device=logits.device), logits)
+                # for each batch row, zero out logits not in top_k
+                topk_vals, topk_idx = torch.topk(logits, top_k, dim=-1)
+                minv = topk_vals[:, -1].unsqueeze(1)
+                logits = torch.where(logits < minv, torch.tensor(-float('Inf'), device=device), logits)
             if top_p is not None and 0.0 < top_p < 1.0:
+                # nucleus (top-p) filtering
                 sorted_logits, sorted_indices = torch.sort(logits, descending=True)
-                probs = torch.softmax(sorted_logits, dim=-1)
+                probs = F.softmax(sorted_logits, dim=-1)
                 cumulative_probs = torch.cumsum(probs, dim=-1)
-                # mask
+                # mask tokens to remove
                 sorted_indices_to_remove = cumulative_probs > top_p
-                # shift to keep at least one
+                # keep at least one token
                 sorted_indices_to_remove[..., 1:] = sorted_indices_to_remove[..., :-1].clone()
                 sorted_indices_to_remove[..., 0] = False
-                indices_to_remove = sorted_indices[sorted_indices_to_remove]
-                logits.scatter_(1, indices_to_remove.unsqueeze(1), -float('Inf'))
-            probs = torch.softmax(logits, dim=-1)
+                # build a mask of tokens to remove in original logits order
+                mask = torch.zeros_like(logits, dtype=torch.bool)
+                for b in range(batch_size):
+                    remove_pos = sorted_indices_to_remove[b]
+                    if remove_pos.any():
+                        idxs = sorted_indices[b][remove_pos]
+                        mask[b, idxs] = True
+                logits = logits.masked_fill(mask, -float('Inf'))
+            probs = F.softmax(logits, dim=-1)
             if temperature == 0:
                 next_token = torch.argmax(probs, dim=-1, keepdim=True)
             else:
                 next_token = torch.multinomial(probs, num_samples=1)
             idx = torch.cat([idx, next_token], dim=1)
         return idx
+
+    def save_checkpoint(self, path: str):
+        import torch
+        checkpoint = {
+            'config': self.config,
+            'model_state_dict': self.state_dict(),
+        }
+        torch.save(checkpoint, path)
+
+    @classmethod
+    def load_checkpoint(cls, path: str, map_location='cpu') -> "ComposterModel":
+        import torch
+        data = torch.load(path, map_location=map_location)
+        cfg = data.get('config')
+        model = cls(cfg)
+        model.load_state_dict(data['model_state_dict'])
+        return model
+
