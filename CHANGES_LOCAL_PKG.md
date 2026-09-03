@@ -1,0 +1,1 @@
+Local packaging & install: added scripts to build a .deb locally (tools/build_deb_local.sh) and to install the repo into /opt/openahi with systemd unit (tools/install_system_local.sh). These avoid external APIs and allow full system-level installs from the repository source.
