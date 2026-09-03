@@ -1,11 +1,4 @@
-"""OpenAHI comprehensive CLI (updated) with server and mirror support.
-
-Added commands:
-- openahi serve [--port PORT]         # serve installed models over local HTTP for LAN/offline use
-- openahi mirror <target_dir>         # copy installed models to a target directory (all files/folders)
-
-This file is an updated version of cli_full.py with serve/mirror integrated.
-"""
+"""OpenAHI CLI (updated) with Termux-friendly serve flags exposed."""
 from __future__ import annotations
 import argparse
 import sys
@@ -264,9 +257,15 @@ def cmd_doctor(args):
 def cmd_serve(args):
     port = args.port
     directory = args.directory or str(MODEL_DIR)
-    print(f"Serving models from {directory} on port {port}. Press Ctrl-C to stop.")
+    tls = args.tls
+    certfile = args.certfile
+    keyfile = args.keyfile
+    username = args.username
+    password = args.password
+    generate_self_signed = args.generate_self_signed
+    print(f"Serving models from {directory} on port {port}. TLS={tls} auth={'yes' if username and password else 'no'}")
     try:
-        serve_models(directory, port)
+        serve_models(directory, port, tls=tls, certfile=certfile, keyfile=keyfile, username=username, password=password, generate_self_signed=generate_self_signed)
     except KeyboardInterrupt:
         print("Server stopped by user")
 
@@ -335,6 +334,13 @@ def main(argv=None):
     p_serve = sub.add_parser('serve')
     p_serve.add_argument('--port', type=int, default=8000)
     p_serve.add_argument('--directory', type=str, default="")
+    # Termux-friendly TLS/basic-auth flags
+    p_serve.add_argument('--tls', action='store_true', help='Enable TLS (HTTPS)')
+    p_serve.add_argument('--certfile', type=str, default=None, help='Path to TLS certificate (pem)')
+    p_serve.add_argument('--keyfile', type=str, default=None, help='Path to TLS key (pem)')
+    p_serve.add_argument('--username', type=str, default=None, help='Basic auth username')
+    p_serve.add_argument('--password', type=str, default=None, help='Basic auth password')
+    p_serve.add_argument('--generate-self-signed', action='store_true', help='Generate a self-signed cert if cert/key not provided')
 
     p_mirror = sub.add_parser('mirror')
     p_mirror.add_argument('target')
