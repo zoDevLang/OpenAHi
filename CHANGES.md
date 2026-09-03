@@ -1,1 +1,1 @@
-Add CLI entrypoints for `openahi` and a tiny `pkg` helper
+Update installer to download remote artifact metadata and construct model checkpoint locally. Add artifacts and requirements.txt.

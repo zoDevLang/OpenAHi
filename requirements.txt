@@ -1,0 +1,5 @@
+# Runtime dependencies for OpenAHI (used by pkg helper)
+# Note: Installing torch via pip will attempt to download the official wheel for your platform.
+# For best results, follow https://pytorch.org and install the appropriate wheel before running `pip install -r requirements.txt`.
+torch
+pytest

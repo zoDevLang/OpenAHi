@@ -1,0 +1,15 @@
+{
+  "name": "composter",
+  "version": "1.00.0",
+  "source": "github",
+  "config": {
+    "vocab_size": 260,
+    "block_size": 64,
+    "n_layers": 4,
+    "n_heads": 4,
+    "d_model": 128,
+    "d_ff": 512,
+    "dropout": 0.1
+  },
+  "notes": "This artifact contains model metadata. The installer will download this file and construct a checkpoint locally based on the published config."
+}
